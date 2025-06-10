@@ -27,7 +27,7 @@ The specific feature being tested—whether it's identifying a person, detecting
 
 ---
 
-## Dataset Re
+## Dataset Requirement
 
 The project's accuracy is highly dependent on how the data is structured. The datasets are organized into two main folders: `images` for training and `test` for evaluation.
 
