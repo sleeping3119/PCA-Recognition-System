@@ -82,3 +82,49 @@ def display_image(image_path):
     plt.show()
 
 
+def main():
+    print("Select an operation:")
+    print("1) Face Identification")
+    print("2) Detect Glasses")
+    print("3) Detect Shade (there must be a shaded image in test folder)")
+    print("4) Emotions")
+    operation = int(input("Enter the serial number from the list: "))
+
+    if operation == 1:
+       directories = [f"images/person_{i}" for i in range(1, 5)]
+    elif operation == 2:
+        directories = ["images/noglasses", "images/glasses"]
+    elif operation == 3:
+        directories = ["images/left", "images/right"]
+    elif operation == 4:
+        directories = ["images/happy", "images/sad", "images/winkle", "images/sleepy", "images/normal", "images/surprise"]
+    else:
+        raise ValueError("Invalid operation selected.")
+
+    pca_bases = {}
+    for dir in directories:
+        images, _ = load_images_from_folder(dir)  # Assuming this function returns (image_data, image_files)
+        mean_centered_data, _, eigenvalues, eigenvectors = perform_pca(images)
+        selected_basis = select_pca_basis(eigenvalues, eigenvectors)
+        pca_bases[dir.split('/')[-1]] = (selected_basis, np.mean(images, axis=0))
+
+    test_images, test_labels = load_images_from_folder("test")
+
+    for idx, (test_image, label) in enumerate(zip(test_images, test_labels)):
+        best_match = None
+        min_loss = float('inf')
+        for pca_label, (pca_basis, mean_image) in pca_bases.items():
+            train_back_projected = project_and_backproject(test_image - mean_image, pca_basis)
+            loss = find_loss(test_image, train_back_projected + mean_image)
+            if loss < min_loss:
+                min_loss = loss
+                best_match = pca_label
+
+        # Displaying each test image with caption
+        plt.imshow(test_image.reshape(64,64), cmap='gray')  
+        plt.title(f"Test Image {label}: Best Match - {best_match}, Loss - {min_loss}")
+        plt.axis('off')
+        plt.show()
+
+if __name__ == "__main__":
+    main()
